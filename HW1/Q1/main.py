@@ -39,19 +39,18 @@ def getNeighbors(position, matrix):
 def dfs(matrix):
     start = (0,0)
     goal = (len(matrix)-1, len(matrix[0])-1)
+
     stack = []
     stack.append((start, [start]))
     visited = set()
 
     while stack:
         (current, path) = stack.pop()
-        if current in visited:
-            continue
-        visited.add(current)
         if current == goal:
             return path
         for neighbor in getNeighbors(current, matrix):
             if neighbor not in visited:
+                visited.add(neighbor)
                 stack.append((neighbor, path + [neighbor]))
     return -1
 
@@ -66,7 +65,7 @@ def bfs(matrix):
     while queue:
         (current, path) = queue.pop(0)
         if current == goal:
-            return path + []
+            return path
         for neighbor in getNeighbors(current, matrix):
             if neighbor not in visited:
                 visited.add(neighbor)
@@ -90,7 +89,7 @@ def printTracedMatrix(matrix, path):
     for i in range(len(matrix)):
         for j in range(len(matrix[0])):
             if (i,j) in path:
-                print("X", end=" ")
+                print("*", end=" ")
             else:
                 print(matrix[i][j], end=" ")
         print()
@@ -115,5 +114,5 @@ if __name__ == "__main__":
     printPath(path)
     printTracedMatrix(matrix, path)
 
-    
+
 
