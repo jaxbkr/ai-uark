@@ -38,6 +38,9 @@ def getNeighbors(position, matrix):
 
 def dfs(matrix):
     start = (0,0)
+    if matrix[0][0] == 0:
+        return -1
+    
     goal = (len(matrix)-1, len(matrix[0])-1)
 
     stack = []
@@ -56,6 +59,9 @@ def dfs(matrix):
 
 def bfs(matrix):
     start = (0,0)
+    if matrix[0][0] == 0:
+        return -1
+    
     goal = (len(matrix)-1, len(matrix[0])-1)
 
     queue = []
@@ -104,12 +110,15 @@ if __name__ == "__main__":
         while dfs(matrix) == -1:
             matrix = createMatrix(m,n)
     
+    print("Matrix: ")
     printMatrix(matrix)
-
+    print()
+    print("DFS: ")
     path = dfs(matrix)
     printPath(path)
     printTracedMatrix(matrix, path)
-
+    print()
+    print("BFS: ")
     path = bfs(matrix)
     printPath(path)
     printTracedMatrix(matrix, path)
