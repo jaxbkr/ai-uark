@@ -18,8 +18,6 @@ Pacman agents (in searchAgents.py).
 """
 
 import util
-from util import Queue
-from util import PriorityQueue
 
 class SearchProblem:
     """
@@ -123,28 +121,35 @@ def depthFirstSearch(problem, initialHit=0, returnHit=False):
             stack.push((nextState[0], nextState[1], currentActions + [action]))
             visited.append(nextState)
 
-def breadthFirstSearch(problem):
+def breadthFirstSearch(problem, initialHit=0, returnHit=False):
+    """Search the shallowest nodes in the search tree first."""
+    "*** YOUR CODE HERE ***"
     startState = problem.getStartState()
-    queue = Queue()
-    visited = set()
+    queue = util.Queue()
+    visited = []
 
-    # store (state, actions)
-    queue.push((startState, []))
-    visited.add(startState)
+    queue.push((startState, 0, []))
+    visited.append((startState, initialHit))
 
-    while not queue.isEmpty():
-        currentState, actions = queue.pop()
-
-        if problem.isGoalState(currentState):
-            return actions
+    while True:
+        currentState, hitWalls, currentActions = queue.pop()
+        if hitWalls > 2:
+            continue
+        if problem.isGoalState(currentState) and hitWalls >= 1 and hitWalls <= 2:
+            if not returnHit:
+                return currentActions
+            else:
+                return currentActions, hitWalls - initialHit
 
         for successor, action, stepCost in problem.getSuccessors(currentState):
-            if successor not in visited:
-                visited.add(successor)
-                queue.push((successor, actions + [action]))
-
-    return []  # no solution
-
+            if problem.isWall(successor):
+                nextState = (successor, hitWalls + 1)
+            else:
+                nextState = (successor, hitWalls)
+            if nextState in visited:
+                continue
+            queue.push((nextState[0], nextState[1], currentActions + [action]))
+            visited.append(nextState)
 
 
 def uniformCostSearch(problem, initialHit=0, returnHit=False):
@@ -189,38 +194,41 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
-def aStarSearch(problem, heuristic=lambda state, problem: 0):
-    """Search the node that has the lowest combined cost + heuristic first."""
-
-    from util import PriorityQueue
-
+def aStarSearch(problem, heuristic=nullHeuristic, initialHit=0, returnHit=False):
+    """Search the node that has the lowest combined cost and heuristic first."""
+    "*** YOUR CODE HERE ***"
     startState = problem.getStartState()
-    pq = PriorityQueue()
-    visited = {}
+    queue = util.PriorityQueue()
 
-    # (state, actions, cost-so-far)
-    pq.push((startState, [], 0), heuristic(startState, problem))
+    queue.push((startState, initialHit, []), 0) ## Current Position, Number of Hitting Walls, List of Actions
+    distance = {}
+    state = (tuple(startState), initialHit)
+    distance[state] = 0
+    while True:
+        currentState, hitWalls, currentActions = queue.pop()
 
-    while not pq.isEmpty():
-        state, actions, costSoFar = pq.pop()
-
-        # If already visited with cheaper cost, skip
-        if state in visited and visited[state] <= costSoFar:
+        if hitWalls > 2:
             continue
-        visited[state] = costSoFar
 
-        # Goal check
-        if problem.isGoalState(state):
-            return actions
+        if problem.isGoalState(currentState) and hitWalls >= 1 and hitWalls <= 2:
+            if not returnHit:
+                return currentActions
+            else:
+                return currentActions, hitWalls - initialHit
 
-        for successor, action, stepCost in problem.getSuccessors(state):
-            newCost = costSoFar + stepCost
-            newActions = actions + [action]
-            pq.push((successor, newActions, newCost),
-                    newCost + heuristic(successor, problem))
+        for successor, action, stepCost in problem.getSuccessors(currentState):
 
-    return []
+            if problem.isWall(successor):
+                nextState = (successor, hitWalls + 1)
+            else:
+                nextState = (successor, hitWalls)
 
+            state = (tuple(nextState[0]), nextState[1])
+            costToGo = problem.getCostOfActions(currentActions + [action]) + heuristic(successor, problem)
+
+            if state not in distance or costToGo < distance[state]:
+                queue.push((nextState[0], nextState[1], currentActions + [action]), costToGo)
+                distance[state] = costToGo
 
 
 # Abbreviations

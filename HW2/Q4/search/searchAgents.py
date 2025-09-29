@@ -37,7 +37,6 @@ Good luck and happy searching!
 from game import Directions
 from game import Agent
 from game import Actions
-from util import manhattanDistance
 import util
 import time
 import search
@@ -284,8 +283,6 @@ class CornersProblem(search.SearchProblem):
     You must select a suitable state space and successor function
     """
 
-    # State = ((x,y), visitedCorners, wallHits)
-
     def __init__(self, startingGameState):
         """
         Stores the walls, pacman's starting position and corners.
@@ -300,7 +297,9 @@ class CornersProblem(search.SearchProblem):
                 print('Warning: no food in corner ' + str(corner))
         self._expanded = 0 # DO NOT CHANGE; Number of search nodes expanded
         self.costFn = lambda x: 1
-
+        # Please add any code here which you would like to use
+        # in initializing the problem
+        "*** YOUR CODE HERE ***"
 
     def getStartState(self):
         """
@@ -308,23 +307,18 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        return (self.startingPosition, frozenset(), 0)
+        util.raiseNotDefined() # Delete this line when you implement your function
 
     def isWall(self, state):
-        """Return True if position is a wall."""
-        if isinstance(state, tuple) and len(state) == 2 and isinstance(state[0], tuple):
-            x, y = state[0]  # ((x,y), visitedCorners)
-        else:
-            x, y = state     # just a position
-        return self.walls[x][y]
+        "*** YOUR CODE HERE ***"
+        util.raiseNotDefined() # Delete this line when you implement your function
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        _, visitedCorners, wallHits = state
-        return len(visitedCorners) == 4 and 1 <= wallHits <= 2
+        util.raiseNotDefined() # Delete this line when you implement your function
 
 
     def getSuccessors(self, state):
@@ -339,27 +333,22 @@ class CornersProblem(search.SearchProblem):
         """
 
         successors = []
-        (x, y), visited, wallHits = state
+        M = self.walls.width
+        N = self.walls.height
 
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
-            dx, dy = Actions.directionToVector(action)
-            nextx, nexty = int(x + dx), int(y + dy)
 
-            nextVisited = set(visited)
-            nextWallHits = wallHits
+            # Add a successor state to the successor list if the action is legal
+            # Here's a code snippet for figuring out whether a new position hits a wall:
+            #   x, y = currentPosition
+            #   dx, dy = Actions.directionToVector(action)
+            #   nextx, nexty = int(x + dx), int(y + dy)
+            #   cost = self.costFn((nextx, nexty))
 
-            if self.isWall((nextx, nexty)):
-                nextWallHits += 1
-                nextPosition = (x, y)  
-            else:
-                # Normal move
-                nextPosition = (nextx, nexty)
-                if nextPosition in self.corners:
-                    nextVisited.add(nextPosition)
 
-            successors.append(((nextPosition, frozenset(nextVisited), nextWallHits), action, 1))
+            "*** YOUR CODE HERE ***"
 
-        self._expanded += 1
+        self._expanded += 1 # DO NOT CHANGE
         return successors
 
     def getCostOfActions(self, actions):
@@ -383,14 +372,12 @@ def cornersHeuristic(state, problem):
     shortest path from the state to a goal of the problem; i.e.  it should be
     admissible (as well as consistent).
     """
-    position, visitedCorners, wallHits = state
-    unvisited = [corner for corner in problem.corners if corner not in visitedCorners]
+    corners = problem.corners # These are the corner coordinates
+    walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
-    if not unvisited:
-        return 0
+    "*** YOUR CODE HERE ***"
 
-    return max(manhattanDistance(position, corner) for corner in unvisited)
-
+    return 0  # Default to trivial solution
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
