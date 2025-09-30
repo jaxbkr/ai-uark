@@ -11,7 +11,7 @@ def print_board(board):
                 print(str(board[i][j]) + " ", end="")
     print()
 
-def find_empty(board) -> (int, int):
+def find_empty(board) -> tuple[int, int]:
     for i in range(len(board)):
         try:
             return i, board[i].index(0), 
@@ -86,10 +86,10 @@ another_sudoku_board = [
 ]
 
 print("Initial Sudoku Board:")
-print_board(another_sudoku_board)
+print_board(sudoku_board)
 
-if solve_sudoku(another_sudoku_board):
+if solve_sudoku(sudoku_board):
     print("Solved Sudoku Board:")
-    print_board(another_sudoku_board)
+    print_board(sudoku_board)
 else:
     print("No solution exists.")
