@@ -102,6 +102,8 @@ def depthFirstSearch(problem, initialHit=0, returnHit=False):
     visited.append((startState, initialHit))
 
     while True:
+        if stack.isEmpty():
+            return []
         currentState, hitWalls, currentActions = stack.pop()
         if hitWalls > 2:
             continue
@@ -124,7 +126,7 @@ def depthFirstSearch(problem, initialHit=0, returnHit=False):
 def breadthFirstSearch(problem, initialHit=0, returnHit=False):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    startState = problem.getStartState()
+    startState, _ = problem.getStartState()
     queue = util.Queue()
     visited = []
 
@@ -132,6 +134,8 @@ def breadthFirstSearch(problem, initialHit=0, returnHit=False):
     visited.append((startState, initialHit))
 
     while True:
+        if queue.isEmpty():
+            return []
         currentState, hitWalls, currentActions = queue.pop()
         if hitWalls > 2:
             continue
@@ -163,6 +167,8 @@ def uniformCostSearch(problem, initialHit=0, returnHit=False):
     distance[state] = 0
 
     while True:
+        if queue.isEmpty():
+            return []
         currentState, hitWalls, currentActions = queue.pop()
 
         if hitWalls > 2:
@@ -205,6 +211,8 @@ def aStarSearch(problem, heuristic=nullHeuristic, initialHit=0, returnHit=False)
     state = (tuple(startState), initialHit)
     distance[state] = 0
     while True:
+        if queue.isEmpty():
+            return []
         currentState, hitWalls, currentActions = queue.pop()
 
         if hitWalls > 2:

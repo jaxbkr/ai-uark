@@ -300,6 +300,7 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        self.cornersEaten = (False, False, False, False)
 
     def getStartState(self):
         """
@@ -307,18 +308,20 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined() # Delete this line when you implement your function
+        return self.startingPosition # Default to trivial solution
 
     def isWall(self, state):
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined() # Delete this line when you implement your function
+        (x, y), visited = state
+        return True if self.walls[x][y] else False
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined() # Delete this line when you implement your function
+        _, visited = state
+        return visited == (True, True, True, True)
 
 
     def getSuccessors(self, state):
@@ -340,13 +343,26 @@ class CornersProblem(search.SearchProblem):
 
             # Add a successor state to the successor list if the action is legal
             # Here's a code snippet for figuring out whether a new position hits a wall:
-            #   x, y = currentPosition
-            #   dx, dy = Actions.directionToVector(action)
-            #   nextx, nexty = int(x + dx), int(y + dy)
-            #   cost = self.costFn((nextx, nexty))
+            # x, y = currentPosition
+            # dx, dy = Actions.directionToVector(action)
+            # nextx, nexty = int(x + dx), int(y + dy)
+            # cost = self.costFn((nextx, nexty))
+
 
 
             "*** YOUR CODE HERE ***"
+            (x, y), visited = state
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            if 0 <= nextx and nextx < M and 0 <= nexty and nexty < N and not self.walls[nextx][nexty]:
+                nextPosition = (nextx, nexty)
+                visitedList = list(visited)
+                if nextPosition in self.corners:
+                    index = self.corners.index(nextPosition)
+                    visitedList[index] = True
+                nextVisited = tuple(visitedList)
+                cost = self.costFn(nextPosition)
+                successors.append( ( (nextPosition, nextVisited), action, cost) )
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
