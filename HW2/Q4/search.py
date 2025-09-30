@@ -82,31 +82,30 @@ def tinyMazeSearch(problem):
 def depthFirstSearch(problem, initialHit=0, returnHit=False):
     """
     Search the deepest nodes in the search tree first.
-
-    Your search algorithm needs to return a list of actions that reaches the
-    goal. Make sure to implement a graph search algorithm.
-
-    To get started, you might want to try some of these simple commands to
-    understand the search problem that is being passed in:
-
-    print("Start:", problem.getStartState())
-    print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
-    print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
-    "*** YOUR CODE HERE ***"
     startState = problem.getStartState()
     stack = util.Stack()
-    visited = []
+    visited = set()
 
-    stack.push((startState, 0, []))
-    visited.append((startState, initialHit))
+    stack.push((startState, initialHit, []))
 
-    while True:
-        if stack.isEmpty():
-            return []
+    while not stack.isEmpty():
         currentState, hitWalls, currentActions = stack.pop()
+        
+        if isinstance(currentState, tuple) and len(currentState) == 2 and isinstance(currentState[0], tuple):
+            # CornersProblem: state is ((x, y), visited_tuple)
+            visitedKey = (currentState[0], currentState[1], hitWalls)
+        else:
+            # PositionSearchProblem: state is (x, y)
+            visitedKey = (tuple(currentState), hitWalls)
+        
+        if visitedKey in visited:
+            continue
+        visited.add(visitedKey)
+        
         if hitWalls > 2:
             continue
+            
         if problem.isGoalState(currentState) and hitWalls >= 1 and hitWalls <= 2:
             if not returnHit:
                 return currentActions
@@ -115,30 +114,39 @@ def depthFirstSearch(problem, initialHit=0, returnHit=False):
 
         for successor, action, stepCost in problem.getSuccessors(currentState):
             if problem.isWall(successor):
-                nextState = (successor, hitWalls + 1)
+                nextHitWalls = hitWalls + 1
             else:
-                nextState = (successor, hitWalls)
-            if nextState in visited:
-                continue
-            stack.push((nextState[0], nextState[1], currentActions + [action]))
-            visited.append(nextState)
+                nextHitWalls = hitWalls
+            
+            stack.push((successor, nextHitWalls, currentActions + [action]))
+    
+    return []
 
 def breadthFirstSearch(problem, initialHit=0, returnHit=False):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    startState, _ = problem.getStartState()
+    startState = problem.getStartState()
     queue = util.Queue()
-    visited = []
+    visited = set()
 
-    queue.push((startState, 0, []))
-    visited.append((startState, initialHit))
+    queue.push((startState, initialHit, []))
 
-    while True:
-        if queue.isEmpty():
-            return []
+    while not queue.isEmpty():
         currentState, hitWalls, currentActions = queue.pop()
+        
+        if isinstance(currentState, tuple) and len(currentState) == 2 and isinstance(currentState[0], tuple):
+            # CornersProblem: state is ((x, y), visited_tuple)
+            visitedKey = (currentState[0], currentState[1], hitWalls)
+        else:
+            # PositionSearchProblem: state is (x, y)
+            visitedKey = (tuple(currentState), hitWalls)
+        
+        if visitedKey in visited:
+            continue
+        visited.add(visitedKey)
+        
         if hitWalls > 2:
             continue
+            
         if problem.isGoalState(currentState) and hitWalls >= 1 and hitWalls <= 2:
             if not returnHit:
                 return currentActions
@@ -147,29 +155,68 @@ def breadthFirstSearch(problem, initialHit=0, returnHit=False):
 
         for successor, action, stepCost in problem.getSuccessors(currentState):
             if problem.isWall(successor):
-                nextState = (successor, hitWalls + 1)
+                nextHitWalls = hitWalls + 1
             else:
-                nextState = (successor, hitWalls)
-            if nextState in visited:
-                continue
-            queue.push((nextState[0], nextState[1], currentActions + [action]))
-            visited.append(nextState)
+                nextHitWalls = hitWalls
+            
+            queue.push((successor, nextHitWalls, currentActions + [action]))
+    
+    return []
 
+
+def breadthFirstSearchNoWalls(problem):
+    """
+    BFS without wall-hitting constraints.
+    Use for problems where wall constraints don't apply.
+    This still avoids walls - it just doesn't track hitting them.
+    """
+    startState = problem.getStartState()
+    queue = util.Queue()
+    visited = set()
+
+    queue.push((startState, []))
+
+    while not queue.isEmpty():
+        currentState, currentActions = queue.pop()
+        
+        if isinstance(currentState, tuple) and len(currentState) == 2 and isinstance(currentState[0], tuple):
+            visitedKey = (currentState[0], currentState[1])
+        else:
+            visitedKey = tuple(currentState)
+        
+        if visitedKey in visited:
+            continue
+        visited.add(visitedKey)
+            
+        if problem.isGoalState(currentState):
+            return currentActions
+
+        for successor, action, stepCost in problem.getSuccessors(currentState):
+            # Skip walls
+            if not problem.isWall(successor):
+                queue.push((successor, currentActions + [action]))
+    
+    return []
 
 def uniformCostSearch(problem, initialHit=0, returnHit=False):
     """Search the node of least total cost first."""
     startState = problem.getStartState()
     queue = util.PriorityQueue()
+    visited = set()
 
     queue.push((startState, initialHit, []), 0)
-    distance = {}
-    state = (tuple(startState), initialHit)
-    distance[state] = 0
 
-    while True:
-        if queue.isEmpty():
-            return []
+    while not queue.isEmpty():
         currentState, hitWalls, currentActions = queue.pop()
+
+        if isinstance(currentState, tuple) and len(currentState) == 2 and isinstance(currentState[0], tuple):
+            visitedKey = (currentState[0], currentState[1], hitWalls)
+        else:
+            visitedKey = (tuple(currentState), hitWalls)
+        
+        if visitedKey in visited:
+            continue
+        visited.add(visitedKey)
 
         if hitWalls > 2:
             continue
@@ -181,16 +228,15 @@ def uniformCostSearch(problem, initialHit=0, returnHit=False):
                 return currentActions, hitWalls - initialHit
 
         for successor, action, stepCost in problem.getSuccessors(currentState):
-
             if problem.isWall(successor):
-                nextState = (successor, hitWalls + 1)
+                nextHitWalls = hitWalls + 1
             else:
-                nextState = (successor, hitWalls)
-            state = (tuple(nextState[0]), nextState[1])
+                nextHitWalls = hitWalls
+            
             costToGo = problem.getCostOfActions(currentActions + [action])
-            if state not in distance or costToGo < distance[state]:
-                queue.push((nextState[0], nextState[1], currentActions + [action]), costToGo)
-                distance[state] = costToGo
+            queue.push((successor, nextHitWalls, currentActions + [action]), costToGo)
+    
+    return []
 
 
 def nullHeuristic(state, problem=None):
@@ -202,18 +248,23 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic, initialHit=0, returnHit=False):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
     startState = problem.getStartState()
     queue = util.PriorityQueue()
+    visited = set()
 
-    queue.push((startState, initialHit, []), 0) ## Current Position, Number of Hitting Walls, List of Actions
-    distance = {}
-    state = (tuple(startState), initialHit)
-    distance[state] = 0
-    while True:
-        if queue.isEmpty():
-            return []
+    queue.push((startState, initialHit, []), 0)
+    
+    while not queue.isEmpty():
         currentState, hitWalls, currentActions = queue.pop()
+
+        if isinstance(currentState, tuple) and len(currentState) == 2 and isinstance(currentState[0], tuple):
+            visitedKey = (currentState[0], currentState[1], hitWalls)
+        else:
+            visitedKey = (tuple(currentState), hitWalls)
+        
+        if visitedKey in visited:
+            continue
+        visited.add(visitedKey)
 
         if hitWalls > 2:
             continue
@@ -225,18 +276,15 @@ def aStarSearch(problem, heuristic=nullHeuristic, initialHit=0, returnHit=False)
                 return currentActions, hitWalls - initialHit
 
         for successor, action, stepCost in problem.getSuccessors(currentState):
-
             if problem.isWall(successor):
-                nextState = (successor, hitWalls + 1)
+                nextHitWalls = hitWalls + 1
             else:
-                nextState = (successor, hitWalls)
-
-            state = (tuple(nextState[0]), nextState[1])
+                nextHitWalls = hitWalls
+            
             costToGo = problem.getCostOfActions(currentActions + [action]) + heuristic(successor, problem)
-
-            if state not in distance or costToGo < distance[state]:
-                queue.push((nextState[0], nextState[1], currentActions + [action]), costToGo)
-                distance[state] = costToGo
+            queue.push((successor, nextHitWalls, currentActions + [action]), costToGo)
+    
+    return []
 
 
 # Abbreviations

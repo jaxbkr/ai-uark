@@ -307,12 +307,29 @@ class CornersProblem(search.SearchProblem):
         Returns the start state (in your state space, not the full Pacman state
         space)
         """
-        "*** YOUR CODE HERE ***"
-        return self.startingPosition # Default to trivial solution
+        # Check if starting position is already at a corner
+        visitedList = [False, False, False, False]
+        if self.startingPosition in self.corners:
+            index = self.corners.index(self.startingPosition)
+            visitedList[index] = True
+        
+        # State is (position, tuple of visited corners)
+        return (self.startingPosition, tuple(visitedList))
 
     def isWall(self, state):
-        "*** YOUR CODE HERE ***"
-        (x, y), visited = state
+        """
+        Check if a state position is a wall.
+        """
+        # Handle both state formats
+        if isinstance(state, tuple) and len(state) == 2:
+            if isinstance(state[0], tuple):
+                # state is ((x, y), visited)
+                position, visited = state
+                x, y = position
+            else:
+                # state is just (x, y)
+                x, y = state
+    
         return True if self.walls[x][y] else False
 
     def isGoalState(self, state):
@@ -327,44 +344,31 @@ class CornersProblem(search.SearchProblem):
     def getSuccessors(self, state):
         """
         Returns successor states, the actions they require, and a cost of 1.
-
-         As noted in search.py:
-            For a given state, this should return a list of triples, (successor,
-            action, stepCost), where 'successor' is a successor to the current
-            state, 'action' is the action required to get there, and 'stepCost'
-            is the incremental cost of expanding to that successor
         """
-
         successors = []
         M = self.walls.width
         N = self.walls.height
 
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
-
-            # Add a successor state to the successor list if the action is legal
-            # Here's a code snippet for figuring out whether a new position hits a wall:
-            # x, y = currentPosition
-            # dx, dy = Actions.directionToVector(action)
-            # nextx, nexty = int(x + dx), int(y + dy)
-            # cost = self.costFn((nextx, nexty))
-
-
-
-            "*** YOUR CODE HERE ***"
             (x, y), visited = state
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
-            if 0 <= nextx and nextx < M and 0 <= nexty and nexty < N and not self.walls[nextx][nexty]:
+            
+            # Include ALL positions within bounds (including walls)
+            if 0 <= nextx and nextx < M and 0 <= nexty and nexty < N:
                 nextPosition = (nextx, nexty)
                 visitedList = list(visited)
-                if nextPosition in self.corners:
+                
+                # Check if we've reached a corner (only count if it's not a wall)
+                if nextPosition in self.corners and not self.walls[nextx][nexty]:
                     index = self.corners.index(nextPosition)
                     visitedList[index] = True
+                
                 nextVisited = tuple(visitedList)
                 cost = self.costFn(nextPosition)
-                successors.append( ( (nextPosition, nextVisited), action, cost) )
+                successors.append(((nextPosition, nextVisited), action, cost))
 
-        self._expanded += 1 # DO NOT CHANGE
+        self._expanded += 1
         return successors
 
     def getCostOfActions(self, actions):
@@ -388,12 +392,38 @@ def cornersHeuristic(state, problem):
     shortest path from the state to a goal of the problem; i.e.  it should be
     admissible (as well as consistent).
     """
-    corners = problem.corners # These are the corner coordinates
-    walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
+    corners = problem.corners 
+    walls = problem.walls
 
-    "*** YOUR CODE HERE ***"
+    position, visited = state
+    
+    # Get list of unvisited corners
+    unvisitedCorners = [corners[i] for i in range(4) if not visited[i]]
+    
+    # If all corners visited, heuristic is 0
+    if len(unvisitedCorners) == 0:
+        return 0
+    
+    minDistance = float('inf')
+    for corner in unvisitedCorners:
+        manhattanDist = abs(position[0] - corner[0]) + abs(position[1] - corner[1])
+        if manhattanDist < minDistance:
+            minDistance = manhattanDist
+    
+    if len(unvisitedCorners) > 1:
 
-    return 0  # Default to trivial solution
+        maxCornerDist = 0
+        for i in range(len(unvisitedCorners)):
+            for j in range(i + 1, len(unvisitedCorners)):
+                dist = abs(unvisitedCorners[i][0] - unvisitedCorners[j][0]) + \
+                       abs(unvisitedCorners[i][1] - unvisitedCorners[j][1])
+                if dist > maxCornerDist:
+                    maxCornerDist = dist
+        
+        return minDistance + maxCornerDist
+    
+    return minDistance
+
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -486,11 +516,29 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
-    footList = foodGrid.asList()
-
-    "*** YOUR CODE HERE ***"
-
-    return 0
+    foodList = foodGrid.asList()
+    
+    # If no food left, heuristic is 0
+    if len(foodList) == 0:
+        return 0
+    
+    maxDistance = 0
+    for food in foodList:
+        manhattanDist = abs(position[0] - food[0]) + abs(position[1] - food[1])
+        if manhattanDist > maxDistance:
+            maxDistance = manhattanDist
+    
+    if len(foodList) > 1:
+        maxFoodSpan = 0
+        for i in range(len(foodList)):
+            for j in range(i + 1, len(foodList)):
+                dist = abs(foodList[i][0] - foodList[j][0]) + abs(foodList[i][1] - foodList[j][1])
+                if dist > maxFoodSpan:
+                    maxFoodSpan = dist
+        
+        return max(maxDistance, maxFoodSpan // 2)
+    
+    return maxDistance
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -515,13 +563,19 @@ class ClosestDotSearchAgent(SearchAgent):
         Returns a path (a list of actions) to the closest dot, starting from
         gameState.
         """
-        # Here are some useful elements of the startState
         startPosition = gameState.getPacmanPosition()
         food = gameState.getFood()
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        # Use regular BFS with wall tracking
+        # Pass current wall hit count and get updated count back
+        if not hasattr(self, 'totalHits'):
+            self.totalHits = 0
+        
+        actions, hitWalls = search.bfs(problem, initialHit=self.totalHits, returnHit=True)
+        self.totalHits += hitWalls
+        return actions
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
