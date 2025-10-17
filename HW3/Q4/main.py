@@ -1,11 +1,8 @@
-
-
 import argparse
 import numpy as np
 
 from frozenlake_env import FrozenLakeEnv
 from q_learning_agent import QLearningAgent
-from dp_agents import value_iteration, policy_iteration
 
 def evaluate_policy_rollout(env, policy, episodes=100):
     successes = 0
@@ -26,14 +23,14 @@ def evaluate_policy_rollout(env, policy, episodes=100):
     #if mode == "vi":
         #print("\n Running Value Iteration...")
         #policy, V = value_iteration(env, gamma=gamma, theta=theta,
-                                    max_iters=max_iters, render_env=True)
+        #max_iters=max_iters, render_env=True)
         #print("[VI] Converged.")
         #success_rate = evaluate_policy_rollout(env, policy, episodes=episodes)
         #print(f"[DP-VI] Success rate over {episodes} episodes: {success_rate:.2f}")
     #elif mode == "pi":
         #print("\n Running Policy Iteration...")
         #policy, V = policy_iteration(env, gamma=gamma, theta=theta,
-                                     max_iters=max_iters, render_env=True)
+        #max_iters=max_iters, render_env=True)
         #print("[PI] Converged.")
         #success_rate = evaluate_policy_rollout(env, policy, episodes=episodes)
         #print(f"[DP-PI] Success rate over {episodes} episodes: {success_rate:.2f}")#

@@ -1,5 +1,3 @@
-
-
 import numpy as np
 
 
@@ -8,11 +6,11 @@ class QLearningAgent:
         self,
         env,
         episodes=3000,
-        alpha=0.5,
-        gamma=0.99,
+        alpha=0.9,
+        gamma=0.9,
         epsilon=1.0,
-        eps_min=0.01,
-        eps_decay=0.995,
+        eps_min=0.0,
+        eps_decay=0.0001,
         max_steps=200,
         render=False,
         print_every=100
@@ -30,6 +28,7 @@ class QLearningAgent:
         self.q_table = np.zeros((env.observation_space.n, env.action_space.n))
 
     def train(self, num_episodes=None, render_env=None):
+        self.eps_decay = 1 / (num_episodes - 1000)
         if num_episodes is None:
             num_episodes = self.episodes
         if render_env is None:
@@ -50,27 +49,32 @@ class QLearningAgent:
                 self.env.render()
 
             while not done and steps < self.max_steps:
-                # TODO: Choose action using epsilon-greedy policy
-                # if np.random.rand() < self.epsilon:
-                #    action = ...........
-                # else:
-                #    action = ...........
+                '''
+                ACTIONS:
+                0 = LEFT
+                1 = DOWN
+                2 = RIGHT
+                3 = UP
+                '''
+                if np.random.rand() < self.epsilon:
+                    action = self.env.action_space.sample()
+                else:
+                    action = np.argmax(self.q_table[state,:])
 
-                # TODO: Take a step in the environment
-                # new_state, reward, terminated, truncated, _ = ......
-                # TODO: Compute whether the episode has ended
-                # done = ........
+                new_state, reward, terminated, truncated, _ = self.env.step(action)
+                # Compute whether the episode has ended
+                done = terminated or truncated
 
-                # TODO: Calculate the TD target
-                # if not terminated:
-                #    best_next_action =..........
-                #    td_target = ............
-                # else:
-                #    td_target =
+                # Calculate the TD target
+                if not terminated:
+                   best_next_action = np.argmax(self.q_table[new_state, :])
+                   td_target = reward + self.gamma * self.q_table[new_state, best_next_action]
+                else:
+                   td_target = reward
 
-                # TODO: Update the Q-table
-                # td_error = ........
-                # self.q_table[state, action] += .......
+                # Update the Q-table
+                td_error = td_target - self.q_table[state, action]
+                self.q_table[state, action] += self.alpha * td_error
 
                 #  Q-table
                 if render_env and hasattr(self.env, 'render_mode') and self.env.render_mode == "human":
@@ -83,8 +87,7 @@ class QLearningAgent:
                 steps += 1
 
             if self.epsilon > self.eps_min:
-                self.epsilon *= self.eps_decay
-                self.epsilon = max(self.epsilon, self.eps_min)
+                self.epsilon = max(self.epsilon - self.eps_decay, 0)
 
             rewards.append(total_reward)
             steps_per_episode.append(steps)
