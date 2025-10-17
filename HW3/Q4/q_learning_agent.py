@@ -28,7 +28,7 @@ class QLearningAgent:
         self.q_table = np.zeros((env.observation_space.n, env.action_space.n))
 
     def train(self, num_episodes=None, render_env=None):
-        self.eps_decay = 1 / (num_episodes - 1000)
+        self.eps_decay = 1 / (num_episodes - (0.1*num_episodes))
         if num_episodes is None:
             num_episodes = self.episodes
         if render_env is None:
